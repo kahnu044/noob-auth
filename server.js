@@ -1,4 +1,6 @@
 const express = require("express");
+const config = require('./config');
+
 const app = express();
 app.use(express.json());
 
@@ -10,4 +12,7 @@ app.get("/", (req, res) => {
   });
 });
 
-app.listen(3010, () => console.log("Auth server running on port 3000"));
+// Start the server
+app.listen(config.PORT, () => {
+    console.log(`Server running in ${config.NODE_ENV} mode on port ${config.PORT}`);
+});
