@@ -65,7 +65,6 @@ const login = async (req, res) => {
       });
     }
 
-    console.log("use, userr",user)
     if (clientApp.authType === "google") {
       return res.status(400).json({
         status: false,
@@ -84,19 +83,71 @@ const login = async (req, res) => {
 
     const token = jwt.sign(
       { email: user.email, clientUrl: user.clientApps },
-      "JWT_SECRET",
+      process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
     res.cookie("token", token, { httpOnly: true, secure: false });
 
-    return res
-      .status(200)
-      .json({ status: true, message: "Login successful", clientUrl,accessToken: token });
+    return res.status(200).json({
+      status: true,
+      message: "Login successful",
+      clientUrl,
+      accessToken: token,
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ status: false, message: "Server error" });
   }
 };
 
-module.exports = { register, login };
+// Google OAuth URL
+const googleOAuth = (req, res) => {
+  const googleAuthUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&response_type=code&scope=email profile`;
+  res.redirect(googleAuthUrl);
+};
+
+// Google OAuth callback
+const googleOAuthCallback = async (req, res) => {
+  const { code } = req.query;
+
+  try {
+    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+        grant_type: "authorization_code",
+      }),
+    });
+
+    const tokenData = await tokenResponse.json();
+    const userResponse = await fetch(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: { Authorization: `Bearer ${tokenData.access_token}` },
+      }
+    );
+    const userData = await userResponse.json();
+
+    const clientUrl = req?.cookies?.clientUrl || "http://example.com";
+    const token = jwt.sign(
+      { email: userData.email, clientUrl },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
+
+    res.cookie("token", token, { httpOnly: true, secure: false });
+    return res.redirect(`${clientUrl}?token=${token}`);
+  } catch (err) {
+    console.error("Google OAuth error:", err);
+    return res.status(500).send("Authentication failed");
+  }
+};
+
+module.exports = { register, login, googleOAuth, googleOAuthCallback };
