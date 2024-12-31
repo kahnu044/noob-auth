@@ -1,9 +1,10 @@
 const express = require("express");
-const cors = require('cors');
+const cors = require("cors");
 require("dotenv").config();
 
 const config = require("./config/development");
 const db = require("./config/db");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 app.use(express.json());
@@ -19,6 +20,7 @@ app.get("/", (req, res) => {
     message: "Welcome to the NoobAuth Server",
   });
 });
+app.use("/api", authRoutes);
 
 // Start the server
 app.listen(config.PORT, () => {
