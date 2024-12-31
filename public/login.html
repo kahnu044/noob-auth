@@ -59,11 +59,13 @@
 
         .oauth-button {
             background-color: #db4437;
-            margin-top: 1rem;
         }
 
         .oauth-button:hover {
             background-color: #a43427;
+        }
+        .login-container p{
+            text-align: center;
         }
     </style>
 </head>
@@ -76,7 +78,10 @@
             <input type="password" id="password" placeholder="Password" required />
             <button type="submit">Login</button>
         </form>
-        <button class="oauth-button">Login with Google</button>
+        <p >Or</p>
+        <form action="/api/auth/google" method="GET">
+            <button type="submit" class="oauth-button">Login with Google</button>
+        </form>
     </div>
 
 </body>
