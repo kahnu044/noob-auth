@@ -112,6 +112,7 @@ const googleOAuthCallback = async (req, res) => {
   const { code } = req.query;
 
   try {
+    // Exchange the code for an access token
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -125,6 +126,8 @@ const googleOAuthCallback = async (req, res) => {
     });
 
     const tokenData = await tokenResponse.json();
+
+    // Retrieve user info using the access token
     const userResponse = await fetch(
       "https://www.googleapis.com/oauth2/v3/userinfo",
       {
@@ -133,15 +136,65 @@ const googleOAuthCallback = async (req, res) => {
     );
     const userData = await userResponse.json();
 
+    if (!userData.email) {
+      return res.status(400).send("Email is required to complete login");
+    }
+
     const clientUrl = req?.cookies?.clientUrl || "http://example.com";
+
+    // Check if the user already exists in the database
+    let user = await User.findOne({ email: userData.email });
+
+    if (!user) {
+      // If user does not exist, create a new user
+      user = new User({
+        email: userData.email,
+        firstName: userData.given_name || "Unknown",
+        lastName: userData.family_name || "User",
+        googleId: userData.sub,
+        clientApps: [
+          {
+            clientUrl,
+            authType: "google",
+          },
+        ],
+      });
+    } else {
+      // If user exists, update the clientApps array
+      const existingApp = user.clientApps.find(
+        (app) => app.clientUrl === clientUrl
+      );
+
+      if (existingApp) {
+        // Update authType if necessary
+        existingApp.authType = "google";
+      } else {
+        // Add a new entry for the client app
+        user.clientApps.push({
+          clientUrl,
+          authType: "google",
+        });
+      }
+
+      // Update googleId if not already set
+      if (!user.googleId) {
+        user.googleId = userData.sub;
+      }
+    }
+
+    // Save the user to the database
+    await user.save();
+
+    // Generate a JWT token
     const token = jwt.sign(
-      { email: userData.email, clientUrl },
+      { email: user.email, clientUrl },
       process.env.JWT_SECRET,
       {
         expiresIn: "1h",
       }
     );
 
+    // Set the token as a cookie and redirect back to the client app
     res.cookie("token", token, { httpOnly: true, secure: false });
     return res.redirect(`${clientUrl}?token=${token}`);
   } catch (err) {
