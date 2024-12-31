@@ -15,6 +15,10 @@ db.connectDB();
 
 // Routes
 app.get("/", (req, res) => {
+  const { clientUrl } = req.query;
+  if (clientUrl) {
+    res.cookie("clientUrl", clientUrl, { httpOnly: true, secure: false });
+  }
   res.sendFile(__dirname + "/public/login.html");
 });
 app.use("/api", authRoutes);
