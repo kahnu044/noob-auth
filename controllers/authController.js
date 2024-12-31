@@ -186,13 +186,17 @@ const googleOAuthCallback = async (req, res) => {
     await user.save();
 
     // Generate a JWT token
-    const token = jwt.sign(
-      { email: user.email, clientUrl },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1h",
-      }
-    );
+    const payload = {
+      id: user._id,
+      email: user.email,
+      firstName: user?.firstName,
+      lastName: user?.lastName,
+      googleId: user?.googleId,
+      clientUrl,
+    };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
     // Set the token as a cookie and redirect back to the client app
     res.cookie("token", token, { httpOnly: true, secure: false });
