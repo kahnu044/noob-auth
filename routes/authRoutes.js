@@ -5,7 +5,10 @@ const {
   googleOAuth,
   googleOAuthCallback,
 } = require("../controllers/authController");
+const isAuthorized = require("../middlewares/isAuthorized");
 const router = express.Router();
+
+router.use(isAuthorized);
 
 // Register route (email/password)
 router.post("/register", register);
