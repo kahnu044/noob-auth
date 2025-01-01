@@ -82,7 +82,14 @@ const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { email: user.email, clientUrl: user.clientApps },
+      {
+        id: user._id,
+        email: user.email,
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+        googleId: user?.googleId,
+        clientUrl: clientApp.clientUrl,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
@@ -140,11 +147,9 @@ const googleOAuthCallback = async (req, res) => {
       return res.status(400).send("Email is required to complete login");
     }
 
-
     const clientUrl = req?.cookies?.clientUrl;
 
     if (clientUrl) {
-
       let user = await User.findOne({ email: userData.email });
 
       if (!user) {
@@ -175,7 +180,6 @@ const googleOAuthCallback = async (req, res) => {
         user.googleId = userData.sub;
       }
 
-
       await user.save();
 
       // Generate a JWT token
@@ -203,11 +207,18 @@ const googleOAuthCallback = async (req, res) => {
     });
 
     res.cookie("token", token, { httpOnly: true, secure: false });
-    return res.send(`Hello: ${userData?.name}, Login successful! You can now close this tab.`);
+    return res.send(
+      `Hello: ${userData?.name}, Login successful! You can now close this tab.`
+    );
   } catch (err) {
     console.error("Google OAuth error:", err);
     return res.status(500).send("Authentication failed");
   }
 };
 
-module.exports = { register, login, googleOAuth, googleOAuthCallback };
+module.exports = {
+  register,
+  login,
+  googleOAuth,
+  googleOAuthCallback,
+};
