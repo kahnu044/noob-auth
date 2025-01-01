@@ -5,10 +5,12 @@ const {
   googleOAuth,
   googleOAuthCallback,
 } = require("../controllers/authController");
-const isAuthorized = require("../middlewares/isAuthorized");
-const router = express.Router();
 
-router.use(isAuthorized);
+const isAuthorized = require("../middlewares/isAuthorized");
+const logger = require("../middlewares/logger");
+
+const router = express.Router();
+router.use(logger);
 
 // Register route (email/password)
 router.post("/register", register);
