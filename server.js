@@ -23,7 +23,7 @@ app.get("/", (req, res) => {
   }
   res.sendFile(__dirname + "/public/login.html");
 });
-app.use("/api", authRoutes);
+app.use("/api/auth", authRoutes);
 
 // Start the server
 app.listen(config.PORT, () => {

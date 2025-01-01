@@ -19,9 +19,9 @@ router.post("/register", register);
 router.post("/login", login);
 
 // Google OAuth routes
-router.get("/auth/google", googleOAuth);
-router.get("/auth/google/callback", googleOAuthCallback);
+router.get("/google", googleOAuth);
+router.get("/google/callback", googleOAuthCallback);
 
-router.get("/auth/validate", checkClientUrl, isAuthorized, validateToken);
+router.get("/validate", checkClientUrl, isAuthorized, validateToken);
 
 module.exports = router;
