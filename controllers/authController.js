@@ -218,29 +218,34 @@ const googleOAuthCallback = async (req, res) => {
 
 // Validate the user by token
 const validateToken = async (req, res) => {
-  console.log("req.", req.user);
-
   if (!req.user || !req.user.email) {
-    return res.status(401).json({ status: false, message: "Invalid token" });
+    return res.status(401).json({ status: false, message: "Invalid token" }); // 401 for authentication issues
   }
 
   try {
+    // Retrieve user by email
     const user = await User.findOne({ email: req.user.email });
     if (!user) {
-      return res.status(404).json({ status: false, message: "User not found" });
+      return res.status(404).json({ status: false, message: "User not found" }); // 404 for missing user
     }
 
-    // Check if the user has access to the client app
-    const clientUrl = "http://localhost:3002";
+    // Check if the clientUrl in headers matches
+    const clientUrl = req.headers.clienturl;
+    if (!clientUrl || clientUrl !== req.user.clientUrl) {
+      return res.status(403).json({
+        status: false,
+        message: "Invalid clientUrl",
+      });
+    }
+
+    // Verify user access to the client app
     const clientApp = user.clientApps.find(
       (app) => app.clientUrl === clientUrl
     );
-
     if (!clientApp) {
       return res.status(403).json({
-        status: true,
+        status: false,
         message: "This user has no access to the specified client app",
-        clientUrl,
       });
     }
 
@@ -257,7 +262,7 @@ const validateToken = async (req, res) => {
     });
   } catch (err) {
     console.error("Token validation error:", err);
-    return res.status(500).json({ status: false, message: "Server error" });
+    return res.status(500).json({ status: false, message: "Server error" }); // 500 for unexpected errors
   }
 };
 

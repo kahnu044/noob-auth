@@ -7,6 +7,7 @@ const {
   validateToken,
 } = require("../controllers/authController");
 
+const checkClientUrl = require("../middlewares/checkClientUrl");
 const isAuthorized = require("../middlewares/isAuthorized");
 const logger = require("../middlewares/logger");
 
@@ -21,6 +22,6 @@ router.post("/login", login);
 router.get("/auth/google", googleOAuth);
 router.get("/auth/google/callback", googleOAuthCallback);
 
-router.get("/auth/validate", isAuthorized, validateToken);
+router.get("/auth/validate", checkClientUrl, isAuthorized, validateToken);
 
 module.exports = router;
