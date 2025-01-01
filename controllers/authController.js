@@ -216,9 +216,55 @@ const googleOAuthCallback = async (req, res) => {
   }
 };
 
+// Validate the user by token
+const validateToken = async (req, res) => {
+  console.log("req.", req.user);
+
+  if (!req.user || !req.user.email) {
+    return res.status(401).json({ status: false, message: "Invalid token" });
+  }
+
+  try {
+    const user = await User.findOne({ email: req.user.email });
+    if (!user) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
+
+    // Check if the user has access to the client app
+    const clientUrl = "http://localhost:3002";
+    const clientApp = user.clientApps.find(
+      (app) => app.clientUrl === clientUrl
+    );
+
+    if (!clientApp) {
+      return res.status(403).json({
+        status: true,
+        message: "This user has no access to the specified client app",
+        clientUrl,
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Token validated successfully",
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        clientUrl: clientApp.clientUrl,
+      },
+    });
+  } catch (err) {
+    console.error("Token validation error:", err);
+    return res.status(500).json({ status: false, message: "Server error" });
+  }
+};
+
 module.exports = {
   register,
   login,
   googleOAuth,
   googleOAuthCallback,
+  validateToken,
 };
