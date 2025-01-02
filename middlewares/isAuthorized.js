@@ -16,7 +16,7 @@ const isAuthorized = (req, res, next) => {
   } catch (err) {
     return res
       .status(401)
-      .json({ status: false, message: "Unauthorized access" });
+      .json({ status: false, message: "Unauthorized access", error: err?.message });
   }
 };
 
