@@ -5,6 +5,7 @@ const {
   googleOAuth,
   googleOAuthCallback,
   validateToken,
+  logout,
 } = require("../controllers/authController");
 
 const checkClientUrl = require("../middlewares/checkClientUrl");
@@ -17,6 +18,8 @@ router.use(logger);
 // Register route (email/password)
 router.post("/register", register);
 router.post("/login", login);
+router.post("/login", login);
+router.post("/logout", checkClientUrl, isAuthorized, logout);
 
 // Google OAuth routes
 router.get("/google", googleOAuth);

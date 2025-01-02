@@ -266,10 +266,35 @@ const validateToken = async (req, res) => {
   }
 };
 
+const logout = async (req, res) => {
+  if (!req.user || !req.user.email) {
+    return res.status(401).json({ status: false, message: "Invalid token" });
+  }
+
+  const clientUrl = req.headers.clienturl;
+  if (!clientUrl || clientUrl !== req.user.clientUrl) {
+    return res.status(403).json({
+      status: false,
+      message: "Invalid clientUrl",
+    });
+  }
+
+  try {
+    res.clearCookie("token");
+    res.clearCookie("clientUrl");
+    return res
+      .status(200)
+      .json({ success: true, message: "Logged out successfully" });
+  } catch (err) {
+    return res.status(401).json({ success: false, message: "Invalid token" });
+  }
+};
+
 module.exports = {
   register,
   login,
   googleOAuth,
   googleOAuthCallback,
   validateToken,
+  logout
 };
