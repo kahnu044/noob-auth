@@ -11,7 +11,7 @@ const register = async (req, res) => {
     if (user) {
       return res
         .status(400)
-        .json({ status: false, message: "Email already exist" });
+        .json({ success: false, message: "Email already exist" });
     }
 
     const newUser = new User({
@@ -31,10 +31,10 @@ const register = async (req, res) => {
 
     res
       .status(201)
-      .json({ status: true, message: "User signed up successfully" });
+      .json({ success: true, message: "User signed up successfully" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ status: false, message: "Server error" });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -48,7 +48,7 @@ const login = async (req, res) => {
     if (!user) {
       return res
         .status(400)
-        .json({ status: false, message: "User not found. Please sign up." });
+        .json({ success: false, message: "User not found. Please sign up." });
     }
 
     const clientApp = user.clientApps.find(
@@ -59,7 +59,7 @@ const login = async (req, res) => {
       user.clientApps.push({ clientUrl, authType: "password", password });
       await user.save();
       return res.status(200).json({
-        status: true,
+        success: true,
         message: "Logged in from new client",
         clientUrl,
       });
@@ -67,7 +67,7 @@ const login = async (req, res) => {
 
     if (clientApp.authType === "google") {
       return res.status(400).json({
-        status: false,
+        success: false,
         message: "You have already logged in with Google for this client.",
       });
     }
@@ -76,7 +76,7 @@ const login = async (req, res) => {
 
     if (!isMatch) {
       return res.status(401).json({
-        status: false,
+        success: false,
         message: "Invalid credentials for this client",
       });
     }
@@ -97,14 +97,14 @@ const login = async (req, res) => {
     res.cookie("token", token, { httpOnly: true, secure: false });
 
     return res.status(200).json({
-      status: true,
+      success: true,
       message: "Login successful",
       clientUrl,
       accessToken: token,
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ status: false, message: "Server error" });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -219,21 +219,21 @@ const googleOAuthCallback = async (req, res) => {
 // Validate the user by token
 const validateToken = async (req, res) => {
   if (!req.user || !req.user.email) {
-    return res.status(401).json({ status: false, message: "Invalid token" }); // 401 for authentication issues
+    return res.status(401).json({ success: false, message: "Invalid token" }); // 401 for authentication issues
   }
 
   try {
     // Retrieve user by email
     const user = await User.findOne({ email: req.user.email });
     if (!user) {
-      return res.status(404).json({ status: false, message: "User not found" }); // 404 for missing user
+      return res.status(404).json({ success: false, message: "User not found" }); // 404 for missing user
     }
 
     // Check if the clientUrl in headers matches
     const clientUrl = req.headers.clienturl;
     if (!clientUrl || clientUrl !== req.user.clientUrl) {
       return res.status(403).json({
-        status: false,
+        success: false,
         message: "Invalid clientUrl",
       });
     }
@@ -244,13 +244,13 @@ const validateToken = async (req, res) => {
     );
     if (!clientApp) {
       return res.status(403).json({
-        status: false,
+        success: false,
         message: "This user has no access to the specified client app",
       });
     }
 
     return res.status(200).json({
-      status: true,
+      success: true,
       message: "Token validated successfully",
       user: {
         id: user._id,
@@ -262,19 +262,19 @@ const validateToken = async (req, res) => {
     });
   } catch (err) {
     console.error("Token validation error:", err);
-    return res.status(500).json({ status: false, message: "Server error" }); // 500 for unexpected errors
+    return res.status(500).json({ success: false, message: "Server error" }); // 500 for unexpected errors
   }
 };
 
 const logout = async (req, res) => {
   if (!req.user || !req.user.email) {
-    return res.status(401).json({ status: false, message: "Invalid token" });
+    return res.status(401).json({ success: false, message: "Invalid token" });
   }
 
   const clientUrl = req.headers.clienturl;
   if (!clientUrl || clientUrl !== req.user.clientUrl) {
     return res.status(403).json({
-      status: false,
+      success: false,
       message: "Invalid clientUrl",
     });
   }
