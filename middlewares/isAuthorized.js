@@ -4,7 +4,7 @@ const isAuthorized = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) {
     return res.status(401).json({
-      status: false,
+      success: false,
       message: "Please provide authorization token in header",
     });
   }
@@ -16,7 +16,7 @@ const isAuthorized = (req, res, next) => {
   } catch (err) {
     return res
       .status(401)
-      .json({ status: false, message: "Unauthorized access", error: err?.message });
+      .json({ success: false, message: "Unauthorized access", error: err?.message });
   }
 };
 
